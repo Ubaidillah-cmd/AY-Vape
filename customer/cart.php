@@ -1,51 +1,29 @@
 <?php
-session_start();
-include "../config/db.php";
-
-// tambah ke cart
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-
-    if (!isset($_SESSION['cart'][$id])) {
-        $_SESSION['cart'][$id] = 1;
-    } else {
-        $_SESSION['cart'][$id]++;
-    }
-}
-
-// hapus item
-if (isset($_GET['hapus'])) {
-    unset($_SESSION['cart'][$_GET['hapus']]);
-}
+$room = $_GET['room'];
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<title>Keranjang</title>
+<title>Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
     margin: 0;
     font-family: Arial;
-    background: #0f172a;
-    color: white;
+    background: radial-gradient(circle at top, #020617, #0f172a);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; /* 🔥 biar ga kepotong footer */
 }
 
-/* CONTAINER */
-.container {
-    width: 90%;
-    margin: auto;
-    padding: 30px 20px;
-    animation: fadeUp 0.7s ease;
-}
-
-/* 🔥 ANIMASI MASUK */
+/* 🔥 ANIMASI GLOBAL */
 @keyframes fadeUp {
     from {
         opacity: 0;
-        transform: translateY(40px);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
@@ -55,202 +33,195 @@ body {
 
 /* HEADER */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 16px;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-a {
-    color: #60a5fa;
-    text-decoration: none;
-    transition: 0.3s;
-}
-
-a:hover {
-    color: #93c5fd;
-}
-
-/* 🔥 CARD GLASS */
-.card {
-    background: rgba(30,41,59,0.7);
-    backdrop-filter: blur(12px);
+/* 🔥 CHAT AREA FULL */
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
     padding: 20px;
-    border-radius: 16px;
-    overflow-x: auto;
-    border: 1px solid rgba(255,255,255,0.05);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
 }
 
-/* TABLE */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-/* 🔥 HEADER TABLE */
-th {
-    background: #020617;
-    padding: 14px;
+/* 🔥 BUBBLE */
+.msg {
+    max-width: 65%;
+    padding: 12px 16px;
+    margin: 6px 0;
+    border-radius: 14px;
     font-size: 14px;
-    color: #93c5fd;
+    animation: fadeUp 0.3s ease;
+    position: relative;
 }
 
-/* 🔥 ROW */
-td {
+/* CUSTOMER */
+.customer {
+    background: linear-gradient(45deg,#2563eb,#60a5fa);
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 5px 15px rgba(37,99,235,0.3);
+}
+
+/* ADMIN */
+.admin {
+    background: rgba(30,41,59,0.8);
+    backdrop-filter: blur(10px);
+    color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+}
+
+/* TIME */
+.time {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-top: 5px;
+    text-align: right;
+}
+
+/* 🔥 INPUT AREA FIX BAWAH */
+.input-box {
+    display: flex;
     padding: 12px;
-    transition: 0.3s;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+    gap: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* 🔥 HOVER ROW */
-tr:hover td {
-    background: rgba(37,99,235,0.1);
-}
-
-/* BORDER */
-tr {
-    border-bottom: 1px solid #334155;
+/* INPUT */
+.input-box input {
+    flex: 1;
+    padding: 13px;
+    border-radius: 30px;
+    border: none;
+    outline: none;
+    background: #020617;
+    color: white;
 }
 
 /* 🔥 BUTTON */
 .btn {
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: white;
-    font-size: 14px;
-    transition: 0.3s;
-    position: relative;
-    overflow: hidden;
-}
-
-/* DELETE */
-.btn-delete {
-    background: #dc2626;
-}
-
-.btn-delete:hover {
-    transform: scale(1.05);
-}
-
-/* CHECKOUT */
-.btn-checkout {
     background: linear-gradient(45deg,#2563eb,#60a5fa);
-    display: inline-block;
-    margin-top: 15px;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-/* 🔥 SHINE EFFECT */
-.btn::before {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(120deg,transparent,rgba(255,255,255,0.4),transparent);
-    top: 0;
-    left: -100%;
-    transition: 0.5s;
+/* HOVER */
+.btn:hover {
+    transform: scale(1.1);
 }
 
-.btn:hover::before {
-    left: 100%;
-}
-
-/* TOTAL */
-.total {
-    text-align: right;
-    margin-top: 20px;
-    font-size: 20px;
+/* 🔥 LINK LOKASI */
+.loc {
+    display: block;
+    margin-top: 5px;
     color: #60a5fa;
+    font-size: 12px;
 }
 
-/* EMPTY */
-.empty {
-    text-align: center;
-    padding: 25px;
-    color: #94a3b8;
-    animation: fadeUp 0.5s ease;
+/* 🔥 SCROLLBAR */
+.chat-box::-webkit-scrollbar {
+    width: 5px;
 }
 
-/* 🔥 RESPONSIVE */
+.chat-box::-webkit-scrollbar-thumb {
+    background: #2563eb;
+    border-radius: 10px;
+}
+
+/* MOBILE */
 @media(max-width:768px){
-    th, td {
-        font-size: 12px;
-        padding: 8px;
-    }
-
-    .header {
-        flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
-    }
+    .msg { max-width: 85%; }
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="container">
-
+<!-- HEADER -->
 <div class="header">
-    <h2>🛒 Keranjang</h2>
-    <a href="../public/index.php">← Kembali Belanja</a>
+💬 Chat dengan Admin
 </div>
 
-<div class="card">
+<!-- CHAT -->
+<div class="chat-box" id="chat"></div>
 
-<table>
-<tr>
-    <th>Produk</th>
-    <th>Harga</th>
-    <th>Qty</th>
-    <th>Total</th>
-    <th>Aksi</th>
-</tr>
-
-<?php
-$total = 0;
-
-if (!empty($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $id => $qty) {
-
-        $data = mysqli_query($conn, "SELECT * FROM produk WHERE id=$id");
-        $p = mysqli_fetch_assoc($data);
-
-        $subtotal = $p['harga'] * $qty;
-        $total += $subtotal;
-?>
-
-<tr style="animation: fadeUp 0.5s ease;">
-    <td><?= $p['nama_produk'] ?></td>
-    <td>Rp <?= number_format($p['harga']) ?></td>
-    <td><?= $qty ?></td>
-    <td>Rp <?= number_format($subtotal) ?></td>
-    <td>
-        <a href="?hapus=<?= $id ?>" class="btn btn-delete">Hapus</a>
-    </td>
-</tr>
-
-<?php } } else { ?>
-<tr>
-    <td colspan="5" class="empty">Keranjang kosong 🛒</td>
-</tr>
-<?php } ?>
-
-</table>
-
-<div class="total">
-    <b>Total: Rp <?= number_format($total) ?></b>
+<!-- INPUT -->
+<div class="input-box">
+    <input type="text" id="msg" placeholder="Ketik pesan...">
+    <button class="btn" onclick="sendMsg()">➤</button>
+    <button class="btn" onclick="sendLoc()">📍</button>
 </div>
 
-<?php if (!empty($_SESSION['cart'])) { ?>
-<a href="checkout.php" class="btn btn-checkout">Checkout</a>
-<?php } ?>
+<script>
+let room = <?= $room ?>;
+let lastLength = 0;
 
-</div>
+// 🔄 LOAD CHAT
+function loadChat() {
+    fetch(`../ajax/get_message.php?room=${room}`)
+    .then(r=>r.text())
+    .then(d=>{
+        document.getElementById("chat").innerHTML = d;
+        document.getElementById("chat").scrollTop = 999999;
 
-</div>
-<?php include '../includes/footer.php'; ?>
+        // 🔔 NOTIF
+        if(d.length > lastLength){
+            new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3").play();
+        }
+
+        lastLength = d.length;
+    });
+}
+
+setInterval(loadChat, 1500);
+
+// 💬 KIRIM PESAN
+function sendMsg(){
+    let input = document.getElementById("msg");
+    let msg = input.value;
+
+    if(msg.trim() === "") return;
+
+    fetch("../ajax/send_message.php",{
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:`room=${room}&sender=customer&message=${msg}`
+    });
+
+    input.value="";
+
+    // auto focus + efek
+    input.focus();
+}
+
+
+// 📍 LOKASI
+function sendLoc(){
+navigator.geolocation.getCurrentPosition(pos=>{
+    fetch("../ajax/send_message.php",{
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded"},
+        body:`room=${room}&sender=customer&lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`
+    });
+});
+}
+</script>
 </body>
 </html>
